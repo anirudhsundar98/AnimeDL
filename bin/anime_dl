@@ -1,0 +1,276 @@
+#!/usr/bin/env ruby
+require "anime_dl"
+require "optparse"
+
+# APP OPTIONS
+options = { option: "link", episode: true, file: nil, quiet: false }
+help_statements = {
+  option: %Q[Option (default: "link"). Values: "l" (or) "link", "d" (or) "download"],
+  episode: %Q[Prevents the app from asking for an Episodes prompt. Gets detals for all episodes.],
+  file: %Q[Provide location to store extracted details. Exits if path does not exist. (Usage Examples below).],
+  quiet: %Q[Suppresses large, in-program help statements.],
+  help: %Q[Show this message and exit.]
+}
+
+ARGV.options do |opts|
+  opts.banner = "AnimeDL: An anime link scraper and downloader"
+  opts.define_head "Usage:  #{File.basename($PROGRAM_NAME)} [options] file"
+  opts.separator ""
+  opts.separator "User can either download episodes or get links to video sources of episodes of a particular anime."
+  opts.separator "On running the command the program prompts the user for a search query and prints a list of search results."
+  opts.separator "The user can then choose a particular anime. Details for all episodes are scraped."
+  opts.separator "To select particular episodes call the app with the '-e' option."
+  opts.separator ""
+  opts.separator "Links: "
+  opts.separator "  To output links to a file, provide the path to a file as the last argument."
+  opts.separator "  If argument is a directory, a new text file will be created in that directory."
+  opts.separator "Downloads: "
+  opts.separator "  To download videos to particular directory, specify the directory as the last argument."
+  opts.separator "  If no directory is specified the videos are downloaded to ~/AnimeDL/anime_name/"
+  opts.separator ""
+  opts.separator "Options:"
+
+  opts.on("-o option", "--option option", help_statements[:option]) do |option|
+    unless (['l', 'link', 'd', 'download'].include? option)
+      puts "Invalid argument to --option"
+      puts %Q[Valid options: "l" (or) "link", "d" (or) "download"]
+      exit
+    end
+
+    options[:option] = option
+  end
+
+  opts.on("-e", "--episode", help_statements[:episode]) do
+    options[:episode] = false
+  end
+
+  opts.on("-f file", "--file=file", help_statements[:file]) do |file|
+    options[:file] = file
+  end
+
+  opts.on("-q", "--quiet", help_statements[:quiet]) do
+    options[:quiet] = true
+  end
+
+
+  opts.on( "-h", "--help", help_statements[:help]) do
+    puts opts
+    exit
+  end
+
+  opts.separator ""
+  opts.separator "Examples:"
+  opts.separator %Q[  `anime_dl`                                        (outputs link urls on the terminal)]
+  opts.separator %Q[  `anime_dl -f rel/path/to/filename.txt`            (outputs link urls to 'rel/path/to/filename.txt')]
+  opts.separator %Q[  `anime_dl -o link -f rel/path/to/directory/`      (outputs link urls to 'rel/path/to/directory/anime_name.txt')]
+  opts.separator %Q[  `anime_dl -o download`                            (downloads videos to './anime_name/')]
+  opts.separator %Q[  `anime_dl -o download -f .`                       (downloads videos to './')]
+  opts.separator %Q[  `anime_dl -o d -f /abs/path/to/directory`         (downloads videos to '/abs/path/to/directory/anime_name/')]
+  opts.separator %Q[  `anime_dl -o download -f /abs/path/to/directory/` (downloads videos to '/abs/path/to/directory/anime_name/')]
+  opts.separator ""
+
+  opts.separator "Example App Usage:"
+  opts.separator "`anime_dl -q`"
+  opts.separator "  Enter Search Query: fullmetal alchemist b"
+  opts.separator "  0. (Exit)"
+  opts.separator "  1. Fullmetal Alchemist Brotherhood Dubbed | Hagane no Renkinjutsushi (2009) Dubbed"
+  opts.separator "  2. Fullmetal Alchemist Brotherhood | Hagane no Renkinjutsushi (2009)"
+  opts.separator "  3. (Enter new Search Query)"
+  opts.separator ""
+  opts.separator "  Choice: 4"
+  opts.separator "  (Empty response gets all episodes, '-1' to exit)."
+  opts.separator "  Total number of Episodes - 20  (0-19)"
+  opts.separator "  Episodes: -1"
+
+  opts.separator ""
+  opts.separator ""
+  opts.separator "When the '-e' option is not provided, the app asks for 'Episodes' after retrieving the user's anime choice."
+  opts.separator "The user can provide induvidual space-seperated episodes."
+  opts.separator "The user can also provide multiple space-seperated ranges with each range having the format 'start-end'."
+  opts.separator "Below are a few examples (assuming anime has more than 18 episodes)."
+  opts.separator %Q[  `Episodes: 2 4 5` - Retrieves details for episodes 2, 4 and 5]
+  opts.separator %Q[  `Episodes: 4-8` - Retrieves details for episodes 4 to 8]
+  opts.separator %Q[  `Episodes: 8-l` - Retrieves details for episodes 8 to the last episode]
+  opts.separator %Q[  `Episodes: 2 9-13 18-l` - Retrieves details for episodes 2, 9 to 13 and 18 to end]
+  opts.separator ""
+  opts.separator "NOTE: "
+  opts.separator "The page being scraped from, \"animeheaven.eu\", only allows a certain number of page views per day (>150, <300)."
+  opts.separator "Once that limit is exceed, you will have to change networks or try again in 24 hours."
+
+  begin
+    opts.parse!
+  rescue OptionParser::MissingArgument, OptionParser::InvalidArgument => error
+    puts "Error: #{error}"
+    puts "Enter `anime_dl - h` for usage options"
+    exit
+  rescue => error
+    puts "Error: #{error}"
+    puts "Enter `anime_dl - h` for usage options"
+    exit
+  end
+end
+
+
+# File Check
+if (options[:file])
+
+  if (options[:option][0] == "l")
+    if ( File.directory?(options[:file]) )
+      unless (File.exists?(options[:file]))
+        puts "Directory does not exist"
+        exit
+      end
+    elsif ( !File.exists?( File.split(options[:file])[0] ) )
+      puts "Directory does not exist"
+      exit
+    end
+
+  elsif ( !File.exists?(options[:file]) || !File.directory?(options[:file]) )
+    puts "Directory does not exist (or) argument is not a directory"
+    puts "For --option=download , argument to --file must be a directory"
+    exit
+
+  end
+
+end
+
+
+# New Instance
+instance = AnimeDL::AnimeHeaven.new
+
+# App Prompts/Help Text
+unless (options[:quiet])
+  $user_prompts = {
+    search: "\nNo Results Found. Please check your search query.\n(Its worth noting that AnimeHeaven does not have some old anime)\n",
+    episodes: "\nEnter the desired episodes.\nYou can provide induvidual space-seperated episodes.\n" +
+              "Or you can also provide multiple space-seperated ranges with each range having the format 'start-end'.\n" +
+              "Examples (assuming anime has more than 18 episodes):\n" +
+              "    `Episodes: 2 4 5` - Retrieves details for episodes 2, 4 and 5\n" +
+              "    `Episodes: 4-8` - Retrieves details for episodes 4 to 8\n" +
+              "    `Episodes: 8-l` - Retrieves details for episodes 8 to the last episode\n" +
+              "    `Episodes: 2 9-13 18-l` - Retrieves details for episodes 2, 9 to 13 and 18 to end\n" +
+              "(Enter empty response to get all episodes, '-1' exits).\n\n"
+  }
+else
+  $user_prompts = {
+    search: "No Results Found.\n",
+    episodes: "\n(Empty response gets all episodes, '-1' exits).\n"
+  }
+end
+
+
+# UTILITY METHODS
+# Result Print
+def output(results)
+  puts "0. (Exit)\n"
+  for i in 0...results.length do
+    print i+1, ". ", results[i].text
+    puts
+  end
+
+  puts "#{results.length + 1}. (Enter new Search Query)\n"
+  print $user_prompts[:search]   if (results.length == 0)
+  puts "\n"
+end
+
+
+# Option Check
+def check(input, max)
+  exit  if (input == "0")
+  return 1  if ( (1..(max + 1)).include? input.to_i )
+
+  puts "Invalid input.\n\n"
+end
+
+
+# Write links to file
+def file_write(file, links, choice)
+  details = ""
+  puts links.pop.link  if (links.last.number == nil)
+  exit  if links.empty?
+
+  for l in links
+    details += l.details
+  end
+
+  puts "Writing"
+  if ( File.directory?(file) )
+    file = File.new( File.join(file, choice.content.split(" | ")[0] + ".txt"), "a+" )
+    file.write(details + "\n")
+    file.close
+  else
+    file = File.new(file, "a+")
+    file.write(details + "\n")
+    file.close
+  end
+end
+
+
+
+# APP LOGIC
+# Search
+while true
+  print "Enter Search Query: "
+  search_query = gets.strip.split(" ").join("+")
+  puts "\n"
+  results = instance.search(search_query)
+  output(results)
+  puts "\n"
+
+  # Anime Choice
+  while true
+    print "Choice: "
+    input = gets.strip
+    break  if (check(input, results.length) == 1)
+  end
+
+  # Re-enter search query
+  break  unless (input.to_i == results.length + 1)
+  puts "\n"
+end
+
+# Choice as Nokogiri Element
+choice = results[input.to_i - 1]
+
+# Range
+range = []
+if (options[:episode])
+  puts "\n"
+  print $user_prompts[:episodes]
+  puts "\n"
+
+  first, last = instance.getTotal(choice)
+  puts "Total number of Episodes - #{last - first + 1}  (#{first}-#{last})"
+  print "Episodes: "
+  range = gets.strip
+  exit  if range == "-1"
+
+  range = range.split(" ")
+end
+
+
+# Data Retrieval
+puts "Scraping: " + choice.content + "\n\n"
+
+if ( options[:option][0] == 'l' && !options[:file])
+  to_print = true
+else 
+  to_print = false
+end
+
+# Links
+links = instance.getLinks(choice, range, options[:quiet], to_print)
+file_write(options[:file], links, choice)   if (options[:file] && options[:option][0] == 'l')
+
+# Downloads
+if ( options[:option][0] == 'd' )
+  if (options[:file] == nil)
+    options[:file] = choice.content.split(" | ")[0]
+    Dir.mkdir( options[:file] )
+  end
+
+  AnimeDL.download(options[:file], links)
+end
+
+
+END { puts "Exiting" }
