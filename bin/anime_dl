@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 require "anime_dl"
 require "optparse"
+require "fileutils"
 
 # APP OPTIONS
 options = { option: "link", episode: true, file: nil, quiet: false }
@@ -9,7 +10,8 @@ help_statements = {
   episode: %Q[Prevents the app from asking for an Episodes prompt. Gets detals for all episodes.],
   file: %Q[Provide location to store extracted details. Exits if path does not exist. (Usage Examples below).],
   quiet: %Q[Suppresses large, in-program help statements.],
-  help: %Q[Show this message and exit.]
+  help: %Q[Shows this message and exits.],
+  version: %Q[Prints version and exits.]
 }
 
 ARGV.options do |opts|
@@ -18,8 +20,7 @@ ARGV.options do |opts|
   opts.separator ""
   opts.separator "User can either download episodes or get links to video sources of episodes of a particular anime."
   opts.separator "On running the command the program prompts the user for a search query and prints a list of search results."
-  opts.separator "The user can then choose a particular anime. Details for all episodes are scraped."
-  opts.separator "To select particular episodes call the app with the '-e' option."
+  opts.separator "The user can then choose a particular anime and choose which episodes to scrape."
   opts.separator ""
   opts.separator "Links: "
   opts.separator "  To output links to a file, provide the path to a file as the last argument."
@@ -30,7 +31,7 @@ ARGV.options do |opts|
   opts.separator ""
   opts.separator "Options:"
 
-  opts.on("-o option", "--option option", help_statements[:option]) do |option|
+  opts.on("-o option", "--option=option", help_statements[:option]) do |option|
     unless (['l', 'link', 'd', 'download'].include? option)
       puts "Invalid argument to --option"
       puts %Q[Valid options: "l" (or) "link", "d" (or) "download"]
@@ -40,7 +41,7 @@ ARGV.options do |opts|
     options[:option] = option
   end
 
-  opts.on("-e", "--episode", help_statements[:episode]) do
+  opts.on("-a", "--all", help_statements[:episode]) do
     options[:episode] = false
   end
 
@@ -53,6 +54,11 @@ ARGV.options do |opts|
   end
 
 
+  opts.on( "-v", "--version", help_statements[:version]) do
+    puts "AnimeDL: 0.1.5"
+    exit
+  end
+
   opts.on( "-h", "--help", help_statements[:help]) do
     puts opts
     exit
@@ -60,13 +66,13 @@ ARGV.options do |opts|
 
   opts.separator ""
   opts.separator "Examples:"
-  opts.separator %Q[  `anime_dl`                                        (outputs link urls on the terminal)]
-  opts.separator %Q[  `anime_dl -f rel/path/to/filename.txt`            (outputs link urls to 'rel/path/to/filename.txt')]
-  opts.separator %Q[  `anime_dl -o link -f rel/path/to/directory/`      (outputs link urls to 'rel/path/to/directory/anime_name.txt')]
-  opts.separator %Q[  `anime_dl -o download`                            (downloads videos to './anime_name/')]
-  opts.separator %Q[  `anime_dl -o download -f .`                       (downloads videos to './')]
-  opts.separator %Q[  `anime_dl -o d -f /abs/path/to/directory`         (downloads videos to '/abs/path/to/directory/anime_name/')]
-  opts.separator %Q[  `anime_dl -o download -f /abs/path/to/directory/` (downloads videos to '/abs/path/to/directory/anime_name/')]
+  opts.separator %Q[  `$ anime_dl`                                        (outputs link urls on the terminal)]
+  opts.separator %Q[  `$ anime_dl -f rel/path/to/filename.txt`            (outputs link urls to 'rel/path/to/filename.txt')]
+  opts.separator %Q[  `$ anime_dl -o link -f rel/path/to/directory/`      (outputs link urls to 'rel/path/to/directory/anime_name.txt')]
+  opts.separator %Q[  `$ anime_dl -o download`                            (downloads videos to './anime_name/')]
+  opts.separator %Q[  `$ anime_dl -o download -f .`                       (downloads videos to './')]
+  opts.separator %Q[  `$ anime_dl -o d -f /abs/path/to/directory`         (downloads videos to '/abs/path/to/directory/anime_name/')]
+  opts.separator %Q[  `$ anime_dl -o download -f /abs/path/to/directory/` (downloads videos to '/abs/path/to/directory/anime_name/')]
   opts.separator ""
 
   opts.separator "Example App Usage:"
@@ -84,7 +90,7 @@ ARGV.options do |opts|
 
   opts.separator ""
   opts.separator ""
-  opts.separator "When the '-e' option is not provided, the app asks for 'Episodes' after retrieving the user's anime choice."
+  opts.separator "When the '-a' option is not provided, the app asks for 'Episodes' after retrieving the user's anime choice."
   opts.separator "The user can provide induvidual space-seperated episodes."
   opts.separator "The user can also provide multiple space-seperated ranges with each range having the format 'start-end'."
   opts.separator "Below are a few examples (assuming anime has more than 18 episodes)."
@@ -95,7 +101,7 @@ ARGV.options do |opts|
   opts.separator ""
   opts.separator "NOTE: "
   opts.separator "The page being scraped from, \"animeheaven.eu\", only allows a certain number of page views per day (>150, <300)."
-  opts.separator "Once that limit is exceed, you will have to change networks or try again in 24 hours."
+  opts.separator "Once that limit is exceeded, you will have to change networks or try again in 24 hours."
 
   begin
     opts.parse!
@@ -121,15 +127,17 @@ if (options[:file])
         exit
       end
     elsif ( !File.exists?( File.split(options[:file])[0] ) )
-      puts "Directory does not exist"
+      puts "Location does not exist"
       exit
     end
 
-  elsif ( !File.exists?(options[:file]) || !File.directory?(options[:file]) )
-    puts "Directory does not exist (or) argument is not a directory"
+  elsif ( File.file?(options[:file]) )
+    puts "Argument is not a directory"
     puts "For --option=download , argument to --file must be a directory"
     exit
-
+  elsif ( !File.exists?(options[:file]) )
+    puts "Creating New Directory #{options[:file]}"
+    FileUtils.mkdir_p(options[:file])
   end
 
 end
@@ -149,7 +157,7 @@ unless (options[:quiet])
               "    `Episodes: 4-8` - Retrieves details for episodes 4 to 8\n" +
               "    `Episodes: 8-l` - Retrieves details for episodes 8 to the last episode\n" +
               "    `Episodes: 2 9-13 18-l` - Retrieves details for episodes 2, 9 to 13 and 18 to end\n" +
-              "(Enter empty response to get all episodes, '-1' exits).\n\n"
+              "(Enter empty response to get all episodes, '-1' exits)\n\n"
   }
 else
   $user_prompts = {
