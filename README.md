@@ -14,7 +14,6 @@ Install the application with:
 
 and run `anime-dl` on the command line.  
 
-
 <br>
 
 To use this in a projext, add this line to your application's Gemfile:
@@ -25,6 +24,9 @@ gem 'AnimeDL'
 And then execute:
 
     $ bundle
+
+<br>
+(If nokogiri fails to install on a MacOS, check out http://www.nokogiri.org/tutorials/installing_nokogiri.html#mac_os_x)  
 
 
 ## Usage
@@ -71,7 +73,7 @@ Below are a few examples (assuming anime below has more than 18 episodes).
 Run `$ anime-dl -h` for the list of all options. 
 
 ## Limitations
-The page being scraped from, "animeheaven.eu", only allows a certain number of page views per day (>150, <300).
+The page being scraped from, "animeheaven.eu", only allows a certain number of page views per day (>170, <350).
 Once that limit is exceeded, you will have to change networks or try again the next day.
 
 

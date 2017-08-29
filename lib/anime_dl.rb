@@ -30,9 +30,9 @@ module AnimeDL
 
     # UTILITY
     def limit_exceeded(quiet)
-      return  "Unfortunately \"animeheaven.eu\" only allows a certain number of page views per day.\n" +
+      return  "Unfortunately \"animeheaven.eu\" only allows a certain number of page views per day (>170, <350).\n" +
               "It seems you have exceeded that limit :(.\n" +
-              "Please change networks or try again in 24 hours."   if (!quiet)
+              "Please change networks or try again tomorrow."   if (!quiet)
 
       return  "(Limit exceeded)"
     end
@@ -43,7 +43,7 @@ module AnimeDL
   def self.download(path, episodes)
     episodes.each do |episode|
       if ( File.exists?( File.join( path, "Episode #{episode.number}.mp4" )) )
-        puts "Skipping Episode #{episode.number} (already exists)"
+        puts "Skipping Episode #{episode.number} (already exists)\n\n"
         next
       else 
         puts "Downloading Episode #{episode.number}"

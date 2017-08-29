@@ -45,7 +45,7 @@ ARGV.options do |opts|
 
 
   opts.on( "-v", "--version", help_statements[:version]) do
-    puts "AnimeDL: Version 0.1.8"
+    puts "AnimeDL: Version 0.2.1"
     exit
   end
 
@@ -71,7 +71,7 @@ ARGV.options do |opts|
   opts.separator "(Run the app WITHOUT the '--quiet' option to allow it to provide explanations and examples for specifying episodes)"
   opts.separator ""
   opts.separator "NOTE: "
-  opts.separator "The page being scraped from, \"animeheaven.eu\", only allows a certain number of page views per day (>150, <300)."
+  opts.separator "The page being scraped from, \"animeheaven.eu\", only allows a certain number of page views per day (>170, <350)."
   opts.separator "Once that limit is exceeded, you will have to change networks or try again the next day."
 
   begin
@@ -255,6 +255,7 @@ end
 
 
 # Data Retrieval
+puts "\n"
 
 if ( scrape_option == 'l' && !options[:file])
   to_print = true

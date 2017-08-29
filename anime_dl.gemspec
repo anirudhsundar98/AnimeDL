@@ -1,6 +1,6 @@
 Gem::Specification.new do |spec|
   spec.name          = "AnimeDL"
-  spec.version       = "0.1.8"
+  spec.version       = "0.2.1"
   spec.authors       = ["Anirudh Sundar"]
   spec.email         = "anirudhsundar@hotmail.com"
 
@@ -13,4 +13,5 @@ Gem::Specification.new do |spec|
   spec.executables   = `git ls-files -- bin/*`.split("\n").map { |f| File.basename(f) }
 
   spec.add_runtime_dependency 'mechanize', '~> 2.7'
+  spec.add_runtime_dependency 'ruby-progressbar', '~> 1.8'
 end
