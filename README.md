@@ -4,7 +4,9 @@
 <img src='https://github.com/anirudhsundar98/AnimeDL/raw/master/fmab_anime_dl.jpg' alt='FMAB Stone'>
 </p>
 
-An app used to download anime episodes or get links to video sources of episodes without having to open your browser or go through annoying pop-up ads.
+An app used to download anime episodes or get links to video sources of anime episodes.
+
+> Downloading and distributing anime episodes may be illegal. This app was written purely for educational purposes and you are responsible for its use.
 
 ## Installation
 

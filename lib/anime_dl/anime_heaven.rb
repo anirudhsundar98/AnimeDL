@@ -20,7 +20,10 @@ module AnimeDL
       episode_links = getPageLinks(option, range)
       episodes = []
 
-      puts "Fetching Links..."  unless (output)
+      unless (output)
+        puts "Fetching Links..."
+        progress_bar = ProgressBar.create(:progress_mark => "\*", :length => 80, :total => episode_links.length)
+      end
 
       episode_links.each do |link|
         episode_page = @agent.get(link.attributes['href'].value)
@@ -38,7 +41,21 @@ module AnimeDL
 
         episode = Episode.new(episode_no, video_src)
         episodes << episode
+
+        # Progress Bar increment
+        begin
+          progress_bar.progress += 1  unless (output)
+        rescue
+          # Bypass InvalidProgressBar Error if raised
+        end
+
         puts episode.details  if (output)
+      end
+
+      # Progress bar finish
+      unless output
+        progress_bar.finish
+        puts "\n"
       end
 
       return episodes

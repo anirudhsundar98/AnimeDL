@@ -45,7 +45,7 @@ ARGV.options do |opts|
 
 
   opts.on( "-v", "--version", help_statements[:version]) do
-    puts "AnimeDL: Version 0.2.1"
+    puts "AnimeDL: Version 0.2.4"
     exit
   end
 
