@@ -16,7 +16,7 @@ module AnimeDL
     end
 
     # Video Links
-    def getLinks(option, range, quiet = false, output = false)
+    def getLinks(option, range = [], quiet = false, output = false)
       episode_links = getPageLinks(option, range)
       episodes = []
 
@@ -37,7 +37,7 @@ module AnimeDL
 
         # Video Link Retrieval
         episode_no = episode_page.uri.to_s[/e=.+/][2..-1]    # (Regex for safety)
-        video_src = episode_page.search("script")[2].to_s[/src='http.*?'/][5...-1]
+        video_src = episode_page.search("script")[3].to_s[/src='http.*?'/][5...-1]
 
         episode = Episode.new(episode_no, video_src)
         episodes << episode

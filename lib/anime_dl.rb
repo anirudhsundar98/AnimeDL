@@ -14,7 +14,7 @@ module AnimeDL
     # Search
     def search(query)
       results_page = @agent.get("http://animeheaven.eu/search.php?q=#{query}")
-      return results_page.search(".iepsan")
+      return results_page.search(".iepcon").search(".cona")
     end
 
     # Returns the total number of episodes
@@ -22,8 +22,18 @@ module AnimeDL
       @anime_page = @agent.get(option.attributes['href'].value)  unless (@anime_page)
       episodes = @anime_page.search(".infoepbox").search("a")
 
-      first = episodes.last.search(".infoept2")[0].content.to_i
-      last = episodes.first.search(".infoept2")[0].content.to_i
+      # New Episodes have a different class
+      begin
+        first = episodes.last.search(".infoept2")[0].content.to_i
+      rescue
+        first = episodes.last.search(".infoept2r")[0].content.to_i
+      end
+      begin
+        last = episodes.first.search(".infoept2")[0].content.to_i
+      rescue
+        last = episodes.first.search(".infoept2r")[0].content.to_i
+      end
+
       return first, last
     end
 
