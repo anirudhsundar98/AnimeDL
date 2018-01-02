@@ -6,7 +6,7 @@ require "fileutils"
 # APP OPTIONS
 options = { episode: true, file: nil, quiet: false }
 help_statements = {
-  episode: %Q[Prevents the app from asking for an Episodes prompt. Gets detals for all episodes.],
+  episode: %Q[Prevents the app from asking for an Episodes prompt. Gets details for all episodes.],
   file: %Q[Provide location to store extracted details. Creates sub-directories as needed. (Usage Examples below).],
   quiet: %Q[Suppresses large, in-program help statements.],
   help: %Q[Shows this message and exits.],
@@ -45,7 +45,7 @@ ARGV.options do |opts|
 
 
   opts.on( "-v", "--version", help_statements[:version]) do
-    puts "AnimeDL: Version 1.0.2"
+    puts "AnimeDL: Version 1.0.3"
     exit
   end
 
@@ -63,8 +63,7 @@ ARGV.options do |opts|
   opts.separator "(If user chooses to DOWNLOAD videos)"
   opts.separator %Q[  `$ anime-dl`                          (downloads videos to './anime_name/')]
   opts.separator %Q[  `$ anime-dl -f .`                     (downloads videos to './')]
-  opts.separator %Q[  `$ anime-dl -f /path/to/directory`    (downloads videos to '/path/to/directory/anime_name/')]
-  opts.separator %Q[  `$ anime-dl -f /path/to/directory/`   (downloads videos to '/path/to/directory/anime_name/')]
+  opts.separator %Q[  `$ anime-dl -f /path/to/directory`    (downloads videos to '/path/to/directory/')]
   opts.separator ""
 
   opts.separator "Specifying Episodes:"
@@ -99,11 +98,11 @@ unless (options[:quiet])
               "Or you can also provide multiple space-seperated ranges with each range having the format 'start-end'.\n" +
               "Examples (assuming anime below has more than 18 episodes):\n" +
               "    `Episodes: 2 4 5` - Retrieves details for episodes 2, 4 and 5\n" +
-              "    `Episodes: 4-8` - Retrieves details for episodes 4 to 8\n" +
+              "    `Episodes: 4-7` - Retrieves details for episodes 4, 5, 6 and 7\n" +
               "    `Episodes: 8-l` - Retrieves details for episodes 8 to the last episode\n" +
-              "    `Episodes: 2 9-13 18-l` - Retrieves details for episodes 2, 9 to 13 and 18 to end\n" +
+              "    `Episodes: 2 9-11 18-l` - Retrieves details for episodes 2, 9, 10, 11 and 18 to the end\n" +
               "(Running app with '-a' or '--all' will automatically retrieve all episodes)\n" +
-              "(Enter empty response to get all episodes, '-1' exits)\n\n"
+              "(Enter empty response to get all episodes or '-1' to exit)\n\n"
   }
 else
   $user_prompts = {

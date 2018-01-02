@@ -57,8 +57,7 @@ On choosing a particular anime, the user can then choose to get links or downloa
 
     `$ anime-dl`                          - (downloads videos to './anime_name/')]  
     `$ anime-dl -f .`                     - (downloads videos to './')]  
-    `$ anime-dl -f /path/to/directory`    - (downloads videos to '/path/to/directory/anime_name/')]  
-    `$ anime-dl -f /path/to/directory/`   - (downloads videos to '/path/to/directory/anime_name/')]  
+    `$ anime-dl -f /path/to/directory`    - (downloads videos to '/path/to/directory/')]
 
 
 ### Specifying Episodes: 

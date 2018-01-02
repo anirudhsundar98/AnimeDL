@@ -37,7 +37,7 @@ module AnimeDL
 
         # Video Link Retrieval
         episode_no = episode_page.uri.to_s[/e=.+/][2..-1]    # (Regex for safety)
-        video_src = episode_page.search("script")[3].to_s[/src='http.*?'/][5...-1]
+        video_src = parseURL(episode_page.search("script")[3].to_s[/'none'>.*?vd2/][16...-6])
 
         episode = Episode.new(episode_no, video_src)
         episodes << episode
@@ -45,8 +45,7 @@ module AnimeDL
         # Progress Bar increment
         begin
           progress_bar.progress += 1  unless (output)
-        rescue
-          # Bypass InvalidProgressBar Error if raised
+        rescue # Bypass InvalidProgressBar Error if raised
         end
 
         puts episode.details  if (output)

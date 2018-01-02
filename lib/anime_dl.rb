@@ -39,6 +39,16 @@ module AnimeDL
 
 
     # UTILITY
+    def parseURL(url)
+      url = url.split("\\").collect do |i|
+        i.insert(0, "0")
+        i = [i.to_i(16)].pack("U")
+      end
+      url.shift
+
+      return url.join("")
+    end
+
     def limit_exceeded(quiet)
       return  "Unfortunately \"animeheaven.eu\" only allows a certain number of page views per day (>170, <350).\n" +
               "It seems you have exceeded that limit :(.\n" +
