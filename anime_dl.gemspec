@@ -1,6 +1,6 @@
 Gem::Specification.new do |spec|
   spec.name          = "AnimeDL"
-  spec.version       = "1.0.3"
+  spec.version       = "1.0.5"
   spec.authors       = ["Anirudh Sundar"]
   spec.email         = "anirudhsundar@hotmail.com"
 

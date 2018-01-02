@@ -20,21 +20,19 @@ class Episode
       begin
         http.get(URI.escape(url_path)) do |str|
           file.write(str)
-
-          begin
-            progress_bar.progress += str.length
-          rescue # Bypass InvalidProgressBar Error if raised
-          end
+          progress_bar.progress += str.length  rescue nil
         end
       rescue Exception
         # Handle SystemExit or Interrupt
         puts "Download incomplete. Deleting file.\n\n"
-        File.delete(File.join( path, "Episode #{@number}.mp4" ))
+        file.close
+        File.delete(File.join( path, "Episode #{@number}.mp4.tmp" ))
         raise
         exit
       end
 
       progress_bar.finish
+      file.close
       File.rename(file, File.join( path, "Episode #{@number}.mp4" ))
     end
 

@@ -1,4 +1,5 @@
 require "mechanize"
+require "base64"
 require "anime_dl/anime_heaven"
 require "episode"
 # Methods to get links in 'anime_dl/#{anime_site}.rb'
@@ -40,13 +41,9 @@ module AnimeDL
 
     # UTILITY
     def parseURL(url)
-      url = url.split("\\").collect do |i|
-        i.insert(0, "0")
-        i = [i.to_i(16)].pack("U")
-      end
-      url.shift
-
-      return url.join("")
+      url = url.to_s[/luu1=".*?"/][6...-1]
+      url.gsub!(/\|/, "2").tr!("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz", "NOPQRSTUVWXYZABCDEFGHIJKLMnopqrstuvwxyzabcdefghijklm")
+      return Base64.decode64(url)
     end
 
     def limit_exceeded(quiet)
@@ -56,7 +53,6 @@ module AnimeDL
 
       return  "(Limit exceeded)"
     end
-
   end
 
   # Download

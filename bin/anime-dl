@@ -45,7 +45,7 @@ ARGV.options do |opts|
 
 
   opts.on( "-v", "--version", help_statements[:version]) do
-    puts "AnimeDL: Version 1.0.3"
+    puts "AnimeDL: Version 1.0.5"
     exit
   end
 
@@ -230,7 +230,7 @@ begin
 
   end
 rescue => error
-  puts "\nDirectory creation failed."
+  puts "\nDirectory creation failed.\n\n"
   puts error
   exit
 end
@@ -263,14 +263,14 @@ else
 end
 
 # Links
-links = instance.getLinks(choice, range, options[:quiet], to_print)
+links = instance.getVideoLinks(choice, range, options[:quiet], to_print)
 file_write(options[:file], links, choice)   if (options[:file] && scrape_option == 'l')
 
 # Downloads
 if ( scrape_option == 'd' )
   if (options[:file] == nil)
     options[:file] = choice.content.split(" | ")[0]
-    Dir.mkdir( options[:file] )
+    FileUtils.mkdir_p( options[:file] )
   end
 
   AnimeDL.download(options[:file], links)
