@@ -1,13 +1,12 @@
 #!/usr/bin/env ruby
 require "anime_dl"
 require "optparse"
-require "fileutils"
 
-# APP OPTIONS
+## App Options
 options = { episode: true, file: nil, quiet: false }
 help_statements = {
-  episode: %Q[Prevents the app from asking for an Episodes prompt. Gets details for all episodes.],
-  file: %Q[Provide location to store extracted details. Creates sub-directories as needed. (Usage Examples below).],
+  all_episodes: %Q[Prevents the app from asking for an Episodes prompt. Fetches all episodes.],
+  file_path: %Q[Provide location to store extracted details. Creates sub-directories as needed. (Usage Examples below).],
   quiet: %Q[Suppresses large, in-program help statements.],
   help: %Q[Shows this message and exits.],
   version: %Q[Prints version and exits.]
@@ -25,18 +24,20 @@ ARGV.options do |opts|
   opts.separator "  To output links to a file, provide the path to a file with '--file'."
   opts.separator "  If argument is a directory, a new text file will be created in that directory."
   opts.separator "  If '--file' is not provided, links are printed on the command line."
+  opts.separator "  Note: If the arguement given with '--file' does not have a trailing `/` as in 'path/to/directory/' it will be assumed to be a file."
+  opts.separator "        For the argument '/path/to/directory', links will be stored in the file called 'directory' located in '/path/to/'"
   opts.separator "Downloads: "
   opts.separator "  To download videos to particular directory, specify the directory with '--file'."
   opts.separator "  If no directory is specified the videos are downloaded to ./anime_name/"
   opts.separator ""
   opts.separator "Options:"
 
-  opts.on("-a", "--all", help_statements[:episode]) do
-    options[:episode] = false
+  opts.on("-a", "--all", help_statements[:all_episodes]) do
+    options[:all_episodes] = true
   end
 
-  opts.on("-f file", "--file=file", help_statements[:file]) do |file|
-    options[:file] = file
+  opts.on("-f file", "--file=file", help_statements[:file_path]) do |file|
+    options[:file_path] = file
   end
 
   opts.on("-q", "--quiet", help_statements[:quiet]) do
@@ -45,7 +46,7 @@ ARGV.options do |opts|
 
 
   opts.on( "-v", "--version", help_statements[:version]) do
-    puts "AnimeDL: Version 1.0.5"
+    puts "AnimeDL: Version 2.0.0"
     exit
   end
 
@@ -86,195 +87,79 @@ ARGV.clear
 
 
 # New Instance
-instance = AnimeDL::AnimeHeaven.new
+web_agent = AnimeDL::AnimeHeaven.new
+user = AnimeDL::User.new(options)
 
-# App Prompts/Help Text
-unless (options[:quiet])
-  $user_prompts = {
-    quiet: "(Note: Run app with '-q' or '--quiet' to suppress help messages)\n(Run anime-dl -h for more options)\n\n",
-    scrape_option: "\nShould the app get links or download episodes? (Empty response will download episodes)\n",
-    search: "\nNo Results Found. Please check your search query.\n(Its worth noting that AnimeHeaven does not have some old anime)\n",
-    episodes: "\nEnter the desired episodes.\nYou can provide induvidual space-seperated episodes.\n" +
-              "Or you can also provide multiple space-seperated ranges with each range having the format 'start-end'.\n" +
-              "Examples (assuming anime below has more than 18 episodes):\n" +
-              "    `Episodes: 2 4 5` - Retrieves details for episodes 2, 4 and 5\n" +
-              "    `Episodes: 4-7` - Retrieves details for episodes 4, 5, 6 and 7\n" +
-              "    `Episodes: 8-l` - Retrieves details for episodes 8 to the last episode\n" +
-              "    `Episodes: 2 9-11 18-l` - Retrieves details for episodes 2, 9, 10, 11 and 18 to the end\n" +
-              "(Running app with '-a' or '--all' will automatically retrieve all episodes)\n" +
-              "(Enter empty response to get all episodes or '-1' to exit)\n\n"
-  }
-else
-  $user_prompts = {
-    quiet: nil,
-    scrape_option: "\nLinks/Downloads?\n",
-    search: "No Results Found.\n",
-    episodes: "\nSelect Episodes. (Empty response gets all episodes, '-1' exits).\n"
-  }
-end
-
-
-# UTILITY METHODS
-# Result Print
-def output(results)
-  puts "0. (Exit)\n"
-  for i in 0...results.length do
-    print i+1, ". ", results[i].text
-    puts
-  end
-
-  puts "#{results.length + 1}. (Enter new Search Query)\n"
-  print $user_prompts[:search]   if (results.length == 0)
-  puts "\n"
-end
-
-
-# Choice Check
-def check(input, arr)
-  return 1  if ( arr.include? input )
-  puts "Invalid input.\n\n"
-end
-
-
-# Write links to file
-def file_write(file, links, choice)
-  details = choice.content.split(" | ")[0] + "\n\n"
-  puts links.pop.link  if (links.last.number == nil)
-  exit  if links.empty?
-
-  for l in links
-    details += l.details
-  end
-
-  puts "Writing"
-  if ( File.directory?(file) )
-    file = File.new( File.join(file, choice.content.split(" | ")[0] + ".txt"), "a+" )
-    file.write(details + "\n\n")
-    file.close
-  else
-    file = File.new(file, "a+")
-    file.write(details + "\n\n")
-    file.close
-  end
-end
-
-
-
-# APP LOGIC
-# Quiet Prompt
-print $user_prompts[:quiet]
-
-# Search
-while true
-  print "Enter Search Query: "
-  search_query = gets.strip.split(" ").join("+")
-  puts "\n"
-  results = instance.search(search_query)
-  output(results)
-  puts "\n"
-
-  # Anime Choice
-  while true
-    print "Choice: "
-    input = gets.strip
-    exit  if (input == "0")
-    break  if (check(input.to_i, 1..(results.length + 1)) == 1)
-  end
-
-  # Re-enter search query
-  break  unless (input.to_i == results.length + 1)
-  puts "\n"
-end
-
-# Choice as Nokogiri Element
-choice = results[input.to_i - 1]
-puts "Anime: " + choice.content + "\n"
-
-# Choice for link or download
-puts $user_prompts[:scrape_option]
-while true
-  print "Option (l/d): "
-  scrape_option = gets.strip
-  break  if ( check(scrape_option, ['l', 'd', ""]) == 1 )
-end
-
-scrape_option == 'd'  if (scrape_option == "")
-
-# File Check
-begin
-  if (options[:file])
-
-    if (scrape_option == "l")
-      if ( !File.exists?(options[:file]) )
-        puts "\n"
-
-        if ( options[:file][-1] == "/" )
-          puts "Creating directory '#{options[:file]}'"
-          FileUtils.mkdir_p(options[:file])
-        else 
-          puts "Creating directory '#{ File.split(options[:file])[0] }'"
-          FileUtils.mkdir_p( File.split(options[:file])[0] )
-        end
-      end
-
-    elsif ( File.file?(options[:file]) )
-      puts "\n"
-      puts "Argument is not a directory"
-      puts "For --option=download , argument to --file must be a directory"
-      exit
-    elsif ( !File.exists?(options[:file]) )
-      puts "\n"
-      puts "Creating directory '#{options[:file]}'"
-      FileUtils.mkdir_p(options[:file])
-    end
-
-  end
-rescue => error
-  puts "\nDirectory creation failed.\n\n"
-  puts error
+# Utility exit method
+def close_app
+  puts "Exiting"
   exit
 end
 
-# Range
-range = []
-if (options[:episode])
-  first, last = instance.getTotal(choice)
+# Quiet Prompt
+print user.prompts[:quiet]
 
+## Search for anime and get user choice
+user_choice = 0
+while true
+  search_query = user.get_search_query
+  results = web_agent.search(search_query)
+  user_choice = user.get_anime_choice(results.length)
   puts "\n"
-  print $user_prompts[:episodes]
-  puts "\n"
 
-  puts "Total number of Episodes - #{last - first + 1}  (#{first}-#{last})"
-  print "Episodes: "
-  range = gets.strip
-  exit  if range == "-1"
-
-  range = range.split(" ")
+  close_app  if (user_choice == "0")  # Choice to exit
+  redo  if (user_choice.to_i == results.length + 1)  # Choice to Re-enter search query
+  break  # Continue
 end
 
+## Anime choice
+anime_choice = web_agent.set_current_anime_page(user_choice.to_i)
+user.set_anime_choice(anime_choice)
+puts "\nAnime: " + anime_choice + "\n"
 
-# Data Retrieval
+## Scrape Option
+user_scrape_option = user.get_scrape_option
+
+## Episode Choices
+episode_choices = []
+unless (options[:all_episodes])  # TO BE REMOVED
+  first_episode, last_episode = web_agent.getEpisodeNumberLimits
+  episode_choices = user.get_episode_choices(first_episode, last_episode)
+  close_app  if episode_choices == "-1"
+  
+  episode_choices = episode_choices.split(" ")
+end
 puts "\n"
 
-if ( scrape_option == 'l' && !options[:file])
-  to_print = true
-else 
-  to_print = false
+
+## Directory and\or file creation and/or File setup
+web_agent.run_pre_fetch_setup
+user_setup_status = user.run_pre_fetch_setup
+close_app  if (user_setup_status == -1)
+
+
+## Data Retrieval
+# Callback to call after an episode is fetched
+callback = Proc.new { |episode| user.handle_episode(episode) }
+web_agent.fetchVideoLinks(episode_choices, callback)
+
+## Done fetching links.
+web_agent.close
+
+if (user_scrape_option == "d")
+  ##
+  # Remove idle message so that the app no longer says "Waiting for episodes...",
+  #  after all episodes have been fetched
+  ##
+  user.set_idle_wait_message_option("")
+
+  # Wait for downloads to complete
+  sleep 10  while (user.download_state == "active")
 end
 
-# Links
-links = instance.getVideoLinks(choice, range, options[:quiet], to_print)
-file_write(options[:file], links, choice)   if (options[:file] && scrape_option == 'l')
+# Post fetch code
+user.run_post_fetch_cleanup
 
-# Downloads
-if ( scrape_option == 'd' )
-  if (options[:file] == nil)
-    options[:file] = choice.content.split(" | ")[0]
-    FileUtils.mkdir_p( options[:file] )
-  end
-
-  AnimeDL.download(options[:file], links)
-end
-
-
-END { puts "Exiting" }
+# Done
+puts "Done\033[K"
+close_app

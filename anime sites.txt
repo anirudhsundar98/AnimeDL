@@ -1,0 +1,37 @@
+ANIME SITES
+  SELF HOST
+  - http://m2.chia-anime.tv/
+
+  SERVER (HD is nice. But some arent in HD)
+  - https://animedub.ac/
+  - https://kissanime.ac/
+
+  LOW QUAL EXTERNAL (TrollVid)
+  - https://animefrenzy.eu/
+  - https://www5.dubhappytv.com/
+
+STUFF
+https://gist.github.com/Burgestrand/454926
+https://github.com/SeleniumHQ/docker-selenium/issues/198
+
+TO-DO
+- Make browser headless
+- Documentation of the web-agent interface
+- Stop browser from loading before retrying the `browser.goto`
+
+- Handle Downloads
+  - Change download function to use openuri
+    - https://stackoverflow.com/questions/14939227/ruby-cli-progress-bar-with-open-uri
+    - https://docs.ruby-lang.org/en/2.0.0/OpenURI/OpenRead.html :progress_proc
+  - .mp4??? Check file type properly
+
+- Handle cases with weird numbers?
+- Catch ReadTimeout errors? Catch Net:HTTP OpenTimeout errors?
+
+- Remove all_episodes option
+- Allow users to select episode/file name storage types
+- Add in app file selection option
+
+- Add more agents/agent-choices
+- Finish version change script
+- Bundle project and include webdriver in project somewhere?

@@ -1,4 +1,3 @@
-test*
 AnimeDL_Bundler
 *.gem
-*script*
+version_change.rb

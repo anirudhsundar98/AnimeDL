@@ -1,105 +1,47 @@
-require "mechanize"
-require "base64"
-require "anime_dl/anime_heaven"
-require "episode"
-# Methods to get links in 'anime_dl/#{anime_site}.rb'
+require "anime_dl/constants"
+require "anime_dl/web_agents/anime_heaven"
+require "anime_dl/user"
+require "anime_dl/episode"
 
+# Contains Utility methods for the AnimeDL module
 module AnimeDL
-  class AnimeHeaven
-    def initialize
-      @agent = Mechanize.new
-      @agent.user_agent_alias = 'Windows Chrome'
-      @anime_page = nil
-    end
-
-    # Search
-    def search(query)
-      results_page = @agent.get("http://animeheaven.eu/search.php?q=#{query}")
-      return results_page.search(".iepcon").search(".cona")
-    end
-
-    # Returns the total number of episodes
-    def getTotal(option = nil)
-      @anime_page = @agent.get(option.attributes['href'].value)  unless (@anime_page)
-      episodes = @anime_page.search(".infoepbox").search("a")
-
-      # New Episodes have a different class
-      begin
-        first = episodes.last.search(".infoept2")[0].content.to_i
-      rescue
-        first = episodes.last.search(".infoept2r")[0].content.to_i
-      end
-      begin
-        last = episodes.first.search(".infoept2")[0].content.to_i
-      rescue
-        last = episodes.first.search(".infoept2r")[0].content.to_i
-      end
-
-      return first, last
-    end
-
-
-    # UTILITY
-    def parseURL(url)
-      url = url.to_s[/luu1=".*?"/][6...-1]
-      url.gsub!(/\|/, "2").tr!("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz", "NOPQRSTUVWXYZABCDEFGHIJKLMnopqrstuvwxyzabcdefghijklm")
-      return Base64.decode64(url)
-    end
-
-    def limit_exceeded(quiet)
-      return  "Unfortunately \"animeheaven.eu\" only allows a certain number of page views per day (>170, <350).\n" +
-              "It seems you have exceeded that limit :(.\n" +
-              "Please change networks or try again tomorrow."   if (!quiet)
-
-      return  "(Limit exceeded)"
-    end
-  end
-
-  # Download
-  def self.download(path, episodes)
-    episodes.each do |episode|
-      if ( File.exists?( File.join( path, "Episode #{episode.number}.mp4" )) )
-        puts "Skipping Episode #{episode.number} (already exists)\n\n"
-        next
-      else 
-        puts "Downloading Episode #{episode.number}"
-      end
-
-      status = episode.download_to(path)
-      return  if status == -1
-    end
-  end
 
   # Episode Range Handler
-  def self.range_handle(range, first, last)
-    temp = []
+  def self.handle_range(episode_choices, first_episode, last_episode)
+    episode_numbers_list = []
 
-    range.each do |arg|
+    episode_choices.each do |arg|
       # Basic REGEX match
       unless (arg.match(/\A[0-9]+\Z|\A[0-9]+\-[0-9l]+\Z/))
         puts "'#{arg}' is an invalid input for 'Episodes'"
         next
       end
 
+      # Use to remove possible duplicates, nonexistant episodes and invalid inputs
       if (arg.include?("-"))
-        f, l = arg.split("-").collect(&:to_i)
-        l = last  if (arg[-1] == "l")
+        first_in_arg, last_in_arg = arg.split("-").collect(&:to_i)
+        last_in_arg = last_episode  if (arg[-1] == "l")
 
-        next  unless (f && l)
-        next  if f > last
-        l = last  if l > last
+        next  unless (first_in_arg && last_in_arg)
+        next  if first_in_arg > last_episode
+        last_in_arg = last_episode  if (last_in_arg > last_episode)
 
-        (f..l).each do |n|
-          temp << n  if ( (first..last).include? n )
+        (first_in_arg..last_in_arg).each do |n|
+          episode_numbers_list << n  if ((first_episode..last_episode).include? n)
+        end
+      else
+        episode_number = -1
+        if (arg == "l")
+          episode_number = last_episode
+        else
+          episode_number = arg.to_i
         end
 
-      else
-        temp << arg.to_i  if ( (first..last).include? arg.to_i )
-
+        episode_numbers_list << episode_number  if ( (first_episode..last_episode).include? episode_number )
       end
     end
 
-    return temp.uniq.sort
+    return episode_numbers_list.uniq.sort
   end
 
 end
