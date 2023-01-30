@@ -1,3 +1,6 @@
+> This tool is deprecated. Animeheaven, the site which this tool depends on, shut down in 2019. The site has since been revived and turned into an anime bookmarking tool instead.  
+> I might turn this project into a generic multithreaded html5 video downloader instead, in the future.
+
 # AnimeDL
 
 <p align='center' style="width: 75%">
